@@ -70,6 +70,7 @@ export default class App extends Component {
     return (
       <section className="todoapp">
         <NewTaskForm taskAdd={this.taskAdd} />
+        {console.log('gfgfg')}
         <section className="main">
           <TaskList
             todos={this.taskFiltered()}
