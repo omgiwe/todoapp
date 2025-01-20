@@ -1,27 +1,28 @@
-import { Component } from "react";
+import { Component } from 'react'
+import PropTypes from 'prop-types'
 
 export default class NewTaskForm extends Component {
   state = {
-    label: "",
-  };
+    label: '',
+  }
 
   onLabelChange = (e) => {
     this.setState({
       label: e.target.value,
-    });
-  };
+    })
+  }
 
   handleKeyDown = (event) => {
-    if (event.key === "Enter") {
-      const description = this.state.label;
+    if (event.key === 'Enter') {
+      const description = this.state.label
       if (description) {
-        this.props.taskAdd(description);
+        this.props.taskAdd(description)
         this.setState({
-          label: "",
-        });
+          label: '',
+        })
       }
     }
-  };
+  }
 
   render() {
     return (
@@ -37,6 +38,10 @@ export default class NewTaskForm extends Component {
           autoFocus
         />
       </header>
-    );
+    )
   }
+}
+
+NewTaskForm.propTypes = {
+  taskAdd: PropTypes.func.isRequired,
 }

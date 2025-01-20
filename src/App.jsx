@@ -1,68 +1,68 @@
-import { Component } from "react";
-import NewTaskForm from "./components/NewTaskForm";
-import TaskList from "./components/TaskList";
-import Footer from "./components/Footer";
+import { Component } from 'react'
+
+import NewTaskForm from './components/NewTaskForm'
+import TaskList from './components/TaskList'
+import Footer from './components/Footer'
 
 export default class App extends Component {
   state = {
-    todos: [
-      { id: "1", body: "Completed task", checked: false },
-      { id: "2", body: "Editing task", checked: false },
-      { id: "3", body: "Active task", checked: false },
-    ],
-    filter: "All",
-  };
+    todos: [],
+    filter: 'All',
+  }
 
-  taskId = 10;
+  taskId = 10
 
-  taskCompleted = (id) => {
+  taskCompleted = (id, value) => {
     this.setState(({ todos }) => ({
-      todos: todos.map((task) =>
-        task.id === id ? { ...task, checked: !task.checked } : task
-      ),
-    }));
-  };
+      todos: todos.map((task) => (task.id === id ? { ...task, checked: value } : task)),
+    }))
+  }
 
   taskDelete = (id) => {
     this.setState(({ todos }) => ({
       todos: todos.filter((task) => task.id !== id),
-    }));
-  };
+    }))
+  }
+
+  taskEditing = (id, text) => {
+    this.setState(({ todos }) => ({
+      todos: todos.map((task) => (task.id === id ? { ...task, body: text } : task)),
+    }))
+  }
 
   taskAdd = (description) => {
     const newTask = {
       id: this.taskId++,
       body: description,
       checked: false,
-    };
+      date: new Date(),
+    }
 
     this.setState(({ todos }) => ({
       todos: [...todos, newTask],
-    }));
-  };
+    }))
+  }
 
-  activTasks = () => {
-    return this.state.todos.filter(({ checked }) => checked === false).length;
-  };
+  activTasks = () => this.state.todos.filter(({ checked }) => checked === false).length
 
   clearCompletedTasks = () => {
     this.setState(({ todos }) => ({
       todos: todos.filter((elem) => elem.checked === false),
-    }));
-  };
+    }))
+  }
 
-  TaskFiltered = () => {
-    const { todos, filter } = this.state;
+  taskFiltered = () => {
+    const { todos, filter } = this.state
     return todos.filter(({ checked }) => {
-      const all = filter === "All";
-      const completed = filter === "Completed";
-      return all ? true : completed ? checked === true : checked === false;
-    });
-  };
+      const all = filter === 'All'
+      const completed = filter === 'Completed'
+      return all ? true : completed ? checked === true : checked === false
+    })
+  }
 
   changeFilter = (value) => {
-    this.setState({ filter: value });
-  };
+    this.setState({ filter: value })
+  }
 
   render() {
     // const { todos } = this.state;
@@ -72,9 +72,10 @@ export default class App extends Component {
         <NewTaskForm taskAdd={this.taskAdd} />
         <section className="main">
           <TaskList
-            todos={this.TaskFiltered()}
+            todos={this.taskFiltered()}
             taskCompleted={this.taskCompleted}
             taskDelete={this.taskDelete}
+            taskEditing={this.taskEditing}
           />
           <Footer
             activTasks={this.activTasks()}
@@ -84,6 +85,6 @@ export default class App extends Component {
           />
         </section>
       </section>
-    );
+    )
   }
 }
