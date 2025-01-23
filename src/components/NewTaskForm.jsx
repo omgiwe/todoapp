@@ -15,12 +15,12 @@ export default class NewTaskForm extends Component {
   handleKeyDown = (event) => {
     if (event.key === 'Enter') {
       const description = this.state.label
-      if (description) {
-        this.props.taskAdd(description)
-        this.setState({
-          label: '',
-        })
+      if (description.trim()) {
+        this.props.taskAdd(description.trim())
       }
+      this.setState({
+        label: '',
+      })
     }
   }
 
