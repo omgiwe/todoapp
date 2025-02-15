@@ -32,9 +32,15 @@ export default class Task extends Component {
     this.setState({ value: e.target.value })
   }
 
+  formatTime = (seconds) => {
+    const min = Math.floor(seconds / 60)
+    const sec = seconds % 60
+    return `${min}:${sec < 10 ? '0' : ''}${sec}`
+  }
+
   render() {
-    const { taskCompleted, taskDelete, todo } = this.props
-    const { body, id, checked, date } = todo
+    const { taskCompleted, taskDelete, todo, handleStartTimer, handleStopTimer } = this.props
+    const { body, id, checked, date, timerCount } = todo
 
     return (
       <li className={checked ? 'completed' : this.state.editing ? 'editing' : ''}>
@@ -47,8 +53,13 @@ export default class Task extends Component {
             checked={checked}
           />
           <label htmlFor={id}>
-            <span className="description">{body}</span>
-            <span className="created">
+            <span className="title">{body}</span>
+            <span className="description">
+              <button className="icon icon-play" onClick={() => handleStartTimer(id)}></button>
+              <button className="icon icon-pause" onClick={() => handleStopTimer(id)}></button>
+              {this.formatTime(timerCount)}
+            </span>
+            <span className="description">
               {`created ${formatDistanceToNow(date, {
                 includeSeconds: true,
                 addSuffix: true,
@@ -78,10 +89,13 @@ Task.propTypes = {
     body: PropTypes.string,
     checked: PropTypes.bool,
     date: PropTypes.instanceOf(Date),
+    timerCount: PropTypes.number,
   }),
   taskCompleted: PropTypes.func.isRequired,
   taskDelete: PropTypes.func.isRequired,
   taskEditing: PropTypes.func.isRequired,
+  handleStartTimer: PropTypes.func.isRequired,
+  handleStopTimer: PropTypes.func.isRequired,
 }
 
 Task.defaultProps = {
@@ -90,5 +104,6 @@ Task.defaultProps = {
     body: 'Задача',
     checked: false,
     date: new Date(),
+    timerCount: 0,
   },
 }

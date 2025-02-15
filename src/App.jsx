@@ -11,14 +11,22 @@ export default class App extends Component {
   }
 
   taskId = 10
+  timerIntervals = {}
 
   taskCompleted = (id, value) => {
-    this.setState(({ todos }) => ({
-      todos: todos.map((task) => (task.id === id ? { ...task, checked: value } : task)),
-    }))
+    this.setState(({ todos }) => {
+      const task = todos.find((task) => task.id === id)
+      if (task && value === true) {
+        this.handleStopTimer(id)
+      }
+      return {
+        todos: todos.map((task) => (task.id === id ? { ...task, checked: value } : task)),
+      }
+    })
   }
 
   taskDelete = (id) => {
+    this.handleStopTimer(id)
     this.setState(({ todos }) => ({
       todos: todos.filter((task) => task.id !== id),
     }))
@@ -30,12 +38,13 @@ export default class App extends Component {
     }))
   }
 
-  taskAdd = (description) => {
+  taskAdd = (description, count) => {
     const newTask = {
       id: this.taskId++,
       body: description,
       checked: false,
       date: new Date(),
+      timerCount: count,
     }
 
     this.setState(({ todos }) => ({
@@ -64,9 +73,29 @@ export default class App extends Component {
     this.setState({ filter: value })
   }
 
-  render() {
-    // const { todos } = this.state;
+  updateTimer = (id) => {
+    this.setState(({ todos }) => ({
+      todos: todos.map((task) =>
+        task.id === id && task.timerCount > 0 ? { ...task, timerCount: task.timerCount - 1 } : task
+      ),
+    }))
+  }
 
+  handleStartTimer = (id) => {
+    const task = this.state.todos.find((task) => task.id === id)
+    if (task && task.timerCount > 0 && !this.timerIntervals[id] && !task.checked) {
+      this.timerIntervals[id] = setInterval(() => this.updateTimer(id), 1000)
+    }
+  }
+
+  handleStopTimer = (id) => {
+    if (this.timerIntervals[id]) {
+      clearInterval(this.timerIntervals[id])
+      delete this.timerIntervals[id]
+    }
+  }
+
+  render() {
     return (
       <section className="todoapp">
         <NewTaskForm taskAdd={this.taskAdd} />
@@ -76,6 +105,8 @@ export default class App extends Component {
             taskCompleted={this.taskCompleted}
             taskDelete={this.taskDelete}
             taskEditing={this.taskEditing}
+            handleStartTimer={this.handleStartTimer}
+            handleStopTimer={this.handleStopTimer}
           />
           <Footer
             activTasks={this.activTasks()}
