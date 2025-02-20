@@ -1,67 +1,55 @@
-import { Component } from 'react'
+import { useRef, useState } from 'react'
 
 import NewTaskForm from './components/NewTaskForm'
 import TaskList from './components/TaskList'
 import Footer from './components/Footer'
 
-export default class App extends Component {
-  state = {
-    todos: [],
-    filter: 'All',
+export default function App() {
+  const [todos, setTodos] = useState([])
+  const [filter, setFilter] = useState('All')
+  const [taskId, setTaskId] = useState(10)
+
+  const timerIntervals = useRef({})
+
+  const taskCompleted = (id, value) => {
+    const task = todos.find((task) => task.id === id)
+    if (task && value === true) {
+      handleStopTimer(id)
+    }
+
+    setTodos((prevTodos) => prevTodos.map((task) => (task.id === id ? { ...task, checked: value } : task)))
   }
 
-  taskId = 10
-  timerIntervals = {}
+  const taskDelete = (id) => {
+    handleStopTimer(id)
 
-  taskCompleted = (id, value) => {
-    this.setState(({ todos }) => {
-      const task = todos.find((task) => task.id === id)
-      if (task && value === true) {
-        this.handleStopTimer(id)
-      }
-      return {
-        todos: todos.map((task) => (task.id === id ? { ...task, checked: value } : task)),
-      }
-    })
+    setTodos((prevTodos) => prevTodos.filter((task) => task.id !== id))
   }
 
-  taskDelete = (id) => {
-    this.handleStopTimer(id)
-    this.setState(({ todos }) => ({
-      todos: todos.filter((task) => task.id !== id),
-    }))
+  const taskEditing = (id, text) => {
+    setTodos((prevTodos) => prevTodos.map((task) => (task.id === id ? { ...task, body: text } : task)))
   }
 
-  taskEditing = (id, text) => {
-    this.setState(({ todos }) => ({
-      todos: todos.map((task) => (task.id === id ? { ...task, body: text } : task)),
-    }))
-  }
-
-  taskAdd = (description, count) => {
+  const taskAdd = (description, count) => {
     const newTask = {
-      id: this.taskId++,
+      id: taskId,
       body: description,
       checked: false,
       date: new Date(),
       timerCount: count,
     }
 
-    this.setState(({ todos }) => ({
-      todos: [...todos, newTask],
-    }))
+    setTodos((prevTodos) => [...prevTodos, newTask])
+    setTaskId((prevId) => prevId + 1)
   }
 
-  activTasks = () => this.state.todos.filter(({ checked }) => checked === false).length
+  const activTasks = () => todos.filter(({ checked }) => checked === false).length
 
-  clearCompletedTasks = () => {
-    this.setState(({ todos }) => ({
-      todos: todos.filter((elem) => elem.checked === false),
-    }))
+  const clearCompletedTasks = () => {
+    setTodos((prevTodos) => prevTodos.filter((elem) => elem.checked === false))
   }
 
-  taskFiltered = () => {
-    const { todos, filter } = this.state
+  const taskFiltered = () => {
     return todos.filter(({ checked }) => {
       const all = filter === 'All'
       const completed = filter === 'Completed'
@@ -69,53 +57,51 @@ export default class App extends Component {
     })
   }
 
-  changeFilter = (value) => {
-    this.setState({ filter: value })
+  const changeFilter = (value) => {
+    setFilter(value)
   }
 
-  updateTimer = (id) => {
-    this.setState(({ todos }) => ({
-      todos: todos.map((task) =>
+  const updateTimer = (id) => {
+    setTodos((prevTodos) =>
+      prevTodos.map((task) =>
         task.id === id && task.timerCount > 0 ? { ...task, timerCount: task.timerCount - 1 } : task
-      ),
-    }))
-  }
-
-  handleStartTimer = (id) => {
-    const task = this.state.todos.find((task) => task.id === id)
-    if (task && task.timerCount > 0 && !this.timerIntervals[id] && !task.checked) {
-      this.timerIntervals[id] = setInterval(() => this.updateTimer(id), 1000)
-    }
-  }
-
-  handleStopTimer = (id) => {
-    if (this.timerIntervals[id]) {
-      clearInterval(this.timerIntervals[id])
-      delete this.timerIntervals[id]
-    }
-  }
-
-  render() {
-    return (
-      <section className="todoapp">
-        <NewTaskForm taskAdd={this.taskAdd} />
-        <section className="main">
-          <TaskList
-            todos={this.taskFiltered()}
-            taskCompleted={this.taskCompleted}
-            taskDelete={this.taskDelete}
-            taskEditing={this.taskEditing}
-            handleStartTimer={this.handleStartTimer}
-            handleStopTimer={this.handleStopTimer}
-          />
-          <Footer
-            activTasks={this.activTasks()}
-            clearCompletedTasks={this.clearCompletedTasks}
-            changeFilter={this.changeFilter}
-            filter={this.state.filter}
-          />
-        </section>
-      </section>
+      )
     )
   }
+
+  const handleStartTimer = (id) => {
+    const task = todos.find((task) => task.id === id)
+    if (task && task.timerCount > 0 && !timerIntervals.current[id] && !task.checked) {
+      timerIntervals.current[id] = setInterval(() => updateTimer(id), 1000)
+    }
+  }
+
+  const handleStopTimer = (id) => {
+    if (timerIntervals.current[id]) {
+      clearInterval(timerIntervals.current[id])
+      delete timerIntervals.current[id]
+    }
+  }
+
+  return (
+    <section className="todoapp">
+      <NewTaskForm taskAdd={taskAdd} />
+      <section className="main">
+        <TaskList
+          todos={taskFiltered()}
+          taskCompleted={taskCompleted}
+          taskDelete={taskDelete}
+          taskEditing={taskEditing}
+          handleStartTimer={handleStartTimer}
+          handleStopTimer={handleStopTimer}
+        />
+        <Footer
+          activTasks={activTasks()}
+          clearCompletedTasks={clearCompletedTasks}
+          changeFilter={changeFilter}
+          filter={filter}
+        />
+      </section>
+    </section>
+  )
 }
